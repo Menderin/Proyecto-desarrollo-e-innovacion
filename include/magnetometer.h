@@ -1,6 +1,10 @@
 #ifndef MAGNETOMETER_H
 #define MAGNETOMETER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #include "esp_err.h"
@@ -20,5 +24,9 @@ typedef struct {
 esp_err_t magnetometer_init(uint8_t channel, uint8_t address);
 esp_err_t magnetometer_read_axes(uint8_t channel, uint8_t address, magnetometer_axes_t *axes);
 float magnetometer_raw_to_ut(int16_t raw);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

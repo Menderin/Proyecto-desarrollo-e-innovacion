@@ -7,7 +7,7 @@
 #define PIN_IR_1        GPIO_NUM_13
 #define PIN_IR_2        GPIO_NUM_12
 
-#define I2C_MASTER_SDA  GPIO_NUM_14
+#define I2C_MASTER_SDA  GPIO_NUM_21
 #define I2C_MASTER_SCL  GPIO_NUM_15
 #define I2C_PORT        I2C_NUM_0
 #define I2C_FREQ_HZ     100000

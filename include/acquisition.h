@@ -1,6 +1,10 @@
 #ifndef ACQUISITION_H
 #define ACQUISITION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -18,5 +22,9 @@ typedef struct {
 } acquisition_buffer_t;
 
 esp_err_t acquisition_capture(acquisition_buffer_t *buffer, uint32_t duration_ms);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

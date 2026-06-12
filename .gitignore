@@ -1,0 +1,66 @@
+# ============================================================
+# ESP-IDF / ESP32 - Archivos generados por compilación
+# ============================================================
+
+# Directorio de compilación completo
+build/
+
+# sdkconfig generado automáticamente (sdkconfig.defaults SÍ se versiona)
+sdkconfig
+
+# Archivos binarios de firmware
+*.bin
+*.elf
+*.map
+*.hex
+
+# Archivos de objeto y librerías estáticas
+*.o
+*.a
+*.obj
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Ninja
+.ninja_deps
+.ninja_log
+build.ninja
+
+# ============================================================
+# Entorno y herramientas
+# ============================================================
+
+# Variables de entorno locales (credenciales WiFi, etc.)
+.env
+*.env.local
+
+# Visual Studio Code
+.vscode/
+
+# CLion / JetBrains
+.idea/
+*.iml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ============================================================
+# Sistema operativo
+# ============================================================
+
+# Linux / macOS
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# Logs
+*.log

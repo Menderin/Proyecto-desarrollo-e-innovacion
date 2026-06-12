@@ -21,6 +21,14 @@ void app_main(void)
 
     ESP_ERROR_CHECK(i2c_bus_init());
     ESP_LOGI(TAG, "I2C inicializado correctamente");
+    // Probe magnetometer I2C address (0x1E) to verify bus and pull‑ups
+    esp_err_t probe_res = i2c_bus_probe(MAGNETOMETER_I2C_ADDR, 100);
+    if (probe_res == ESP_OK) {
+        ESP_LOGI(TAG, "I2C probe OK: magnetometer found at 0x%02X", MAGNETOMETER_I2C_ADDR);
+    } else {
+        ESP_LOGW(TAG, "I2C probe FAILED: magnetometer not detected (0x%02X) err=%s",
+                 MAGNETOMETER_I2C_ADDR, esp_err_to_name(probe_res));
+    }
 
     ESP_ERROR_CHECK(ir_sensor_init());
     ESP_LOGI(TAG, "GPIOs IR inicializados correctamente");

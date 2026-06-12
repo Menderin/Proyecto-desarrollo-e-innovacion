@@ -1,6 +1,10 @@
 #ifndef CLASSIFIER_H
 #define CLASSIFIER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acquisition.h"
 #include "esp_err.h"
 
@@ -12,5 +16,9 @@ typedef enum {
 esp_err_t classifier_init(void);
 classifier_result_t classifier_run(const acquisition_buffer_t *buffer);
 const char *classifier_result_to_string(classifier_result_t result);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
