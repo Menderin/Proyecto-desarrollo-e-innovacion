@@ -7,6 +7,7 @@
 #include "esp_log.h"
 
 #include "app_config.h"
+#include "magnetometer.h"
 
 static const char *TAG = "ACQ";
 
@@ -33,6 +34,8 @@ esp_err_t acquisition_capture(acquisition_buffer_t *buffer, uint32_t duration_ms
         requested_samples = ACQ_MAX_SAMPLES;
     }
 
+    size_t successful_reads = 0;
+
     for (size_t frame_idx = 0; frame_idx < requested_samples; frame_idx++) {
         acquisition_frame_t *frame = &buffer->frames[frame_idx];
 
@@ -46,6 +49,7 @@ esp_err_t acquisition_capture(acquisition_buffer_t *buffer, uint32_t duration_ms
             );
 
             if (read_result == ESP_OK) {
+                successful_reads++;
                 const magnetometer_axes_t *axes = &frame->sensors[sensor_idx].axes;
 
                 ESP_LOGI(TAG,
@@ -73,5 +77,14 @@ esp_err_t acquisition_capture(acquisition_buffer_t *buffer, uint32_t duration_ms
         vTaskDelay(pdMS_TO_TICKS(ACQ_SAMPLE_MS));
     }
 
+    if (successful_reads == 0) {
+        ESP_LOGE(TAG, "Adquisicion fallida: 0 lecturas exitosas de %u muestras x %u sensores",
+                 (unsigned)requested_samples, (unsigned)SENSOR_COUNT);
+        return ESP_FAIL;
+    }
+
+    ESP_LOGI(TAG, "Adquisicion completa: %u/%u lecturas exitosas",
+             (unsigned)successful_reads,
+             (unsigned)(requested_samples * SENSOR_COUNT));
     return ESP_OK;
 }
