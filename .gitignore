@@ -4,6 +4,7 @@
 
 # Directorio de compilación completo
 build/
+managed_components/
 
 # sdkconfig generado automáticamente (sdkconfig.defaults SÍ se versiona)
 sdkconfig
@@ -64,3 +65,11 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Capturas crudas de magnetometro
+data/raw/*.json
+!data/raw/.gitkeep
+
+# Capturas etiquetadas de cruces
+data/crossings/*.json
+!data/crossings/.gitkeep

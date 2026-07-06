@@ -36,10 +36,15 @@ static esp_err_t magnetometer_write_register(uint8_t address, uint8_t reg, uint8
 
 esp_err_t magnetometer_init(uint8_t channel, uint8_t address)
 {
+#if APP_USE_I2C_MUX
     esp_err_t result = tca9548a_select_channel(channel);
     if (result != ESP_OK) {
         return result;
     }
+#else
+    (void)channel;
+    esp_err_t result = ESP_OK;
+#endif
 
     result = i2c_bus_probe(address, 50);
     if (result != ESP_OK) {
@@ -71,10 +76,15 @@ esp_err_t magnetometer_read_axes(uint8_t channel, uint8_t address, magnetometer_
         return ESP_ERR_INVALID_ARG;
     }
 
+#if APP_USE_I2C_MUX
     esp_err_t result = tca9548a_select_channel(channel);
     if (result != ESP_OK) {
         return result;
     }
+#else
+    (void)channel;
+    esp_err_t result = ESP_OK;
+#endif
 
     uint8_t reg = HMC5883L_REG_DATA_X_MSB;
     uint8_t data[6] = {0};

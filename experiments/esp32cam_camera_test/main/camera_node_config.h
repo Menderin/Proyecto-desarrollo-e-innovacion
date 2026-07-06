@@ -1,0 +1,35 @@
+#ifndef CAMERA_NODE_CONFIG_H
+#define CAMERA_NODE_CONFIG_H
+
+#include "driver/gpio.h"
+#include "driver/uart.h"
+
+// AI Thinker ESP32-CAM + OV2640.
+#define CAMERA_PIN_PWDN  GPIO_NUM_32
+#define CAMERA_PIN_RESET GPIO_NUM_NC
+#define CAMERA_PIN_XCLK  GPIO_NUM_0
+#define CAMERA_PIN_SIOD  GPIO_NUM_26
+#define CAMERA_PIN_SIOC  GPIO_NUM_27
+#define CAMERA_PIN_Y9    GPIO_NUM_35
+#define CAMERA_PIN_Y8    GPIO_NUM_34
+#define CAMERA_PIN_Y7    GPIO_NUM_39
+#define CAMERA_PIN_Y6    GPIO_NUM_36
+#define CAMERA_PIN_Y5    GPIO_NUM_21
+#define CAMERA_PIN_Y4    GPIO_NUM_19
+#define CAMERA_PIN_Y3    GPIO_NUM_18
+#define CAMERA_PIN_Y2    GPIO_NUM_5
+#define CAMERA_PIN_VSYNC GPIO_NUM_25
+#define CAMERA_PIN_HREF  GPIO_NUM_23
+#define CAMERA_PIN_PCLK  GPIO_NUM_22
+
+// UART dedicada al ESP32 detector. No usa UART0, reservada para flash/monitor.
+#define DETECTOR_UART_PORT    UART_NUM_2
+#define DETECTOR_UART_RX_PIN  GPIO_NUM_13
+#define DETECTOR_UART_TX_PIN  GPIO_NUM_14
+#define DETECTOR_UART_BAUD    115200
+#define DETECTOR_UART_RX_SIZE 1024
+
+#define CAMERA_NODE_LINE_MAX 128
+
+#endif
+

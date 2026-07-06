@@ -1,0 +1,100 @@
+#include "esp_camera.h"
+#include "esp_err.h"
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+static const char *TAG = "CAM_TEST";
+
+// Pinout ESP32-CAM AI Thinker con OV2640.
+#define CAMERA_PIN_PWDN  32
+#define CAMERA_PIN_RESET -1
+#define CAMERA_PIN_XCLK  0
+#define CAMERA_PIN_SIOD  26
+#define CAMERA_PIN_SIOC  27
+#define CAMERA_PIN_Y9    35
+#define CAMERA_PIN_Y8    34
+#define CAMERA_PIN_Y7    39
+#define CAMERA_PIN_Y6    36
+#define CAMERA_PIN_Y5    21
+#define CAMERA_PIN_Y4    19
+#define CAMERA_PIN_Y3    18
+#define CAMERA_PIN_Y2    5
+#define CAMERA_PIN_VSYNC 25
+#define CAMERA_PIN_HREF  23
+#define CAMERA_PIN_PCLK  22
+
+static camera_config_t camera_test_config(void)
+{
+    camera_config_t config = {
+        .pin_pwdn = CAMERA_PIN_PWDN,
+        .pin_reset = CAMERA_PIN_RESET,
+        .pin_xclk = CAMERA_PIN_XCLK,
+        .pin_sccb_sda = CAMERA_PIN_SIOD,
+        .pin_sccb_scl = CAMERA_PIN_SIOC,
+        .pin_d7 = CAMERA_PIN_Y9,
+        .pin_d6 = CAMERA_PIN_Y8,
+        .pin_d5 = CAMERA_PIN_Y7,
+        .pin_d4 = CAMERA_PIN_Y6,
+        .pin_d3 = CAMERA_PIN_Y5,
+        .pin_d2 = CAMERA_PIN_Y4,
+        .pin_d1 = CAMERA_PIN_Y3,
+        .pin_d0 = CAMERA_PIN_Y2,
+        .pin_vsync = CAMERA_PIN_VSYNC,
+        .pin_href = CAMERA_PIN_HREF,
+        .pin_pclk = CAMERA_PIN_PCLK,
+        .xclk_freq_hz = 20000000,
+        .ledc_timer = LEDC_TIMER_0,
+        .ledc_channel = LEDC_CHANNEL_0,
+        .pixel_format = PIXFORMAT_JPEG,
+        .frame_size = FRAMESIZE_QVGA,
+        .jpeg_quality = 12,
+        .fb_count = 1,
+        .fb_location = CAMERA_FB_IN_PSRAM,
+        .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
+    };
+
+    return config;
+}
+
+void app_main(void)
+{
+    ESP_LOGI(TAG, "Inicializando prueba ESP32-CAM AI Thinker OV2640");
+
+    camera_config_t config = camera_test_config();
+    esp_err_t init_result = esp_camera_init(&config);
+    if (init_result != ESP_OK) {
+        ESP_LOGE(TAG, "Fallo init camara: %s", esp_err_to_name(init_result));
+        ESP_LOGE(TAG, "Revisa alimentacion 5V estable, modelo AI Thinker y cable flat OV2640");
+        while (true) {
+            vTaskDelay(pdMS_TO_TICKS(5000));
+        }
+    }
+
+    sensor_t *sensor = esp_camera_sensor_get();
+    if (sensor != NULL) {
+        ESP_LOGI(TAG, "Sensor detectado pid=0x%02x ver=0x%02x",
+                 sensor->id.PID,
+                 sensor->id.VER);
+    }
+
+    uint32_t frame_seq = 0;
+    while (true) {
+        camera_fb_t *frame = esp_camera_fb_get();
+        if (frame == NULL) {
+            ESP_LOGE(TAG, "No se pudo capturar frame");
+        } else {
+            ESP_LOGI(TAG,
+                     "CAM_FRAME seq=%u size=%u width=%u height=%u format=%u",
+                     (unsigned)frame_seq,
+                     (unsigned)frame->len,
+                     (unsigned)frame->width,
+                     (unsigned)frame->height,
+                     (unsigned)frame->format);
+            esp_camera_fb_return(frame);
+            frame_seq++;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}

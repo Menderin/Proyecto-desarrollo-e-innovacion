@@ -10,7 +10,7 @@ Actúa como un Ingeniero de Software Embebido Senior experto en el framework ESP
 
 ## Mapa de Conexiones (Pines Comunes)
 * **I2C Bus (SDA):** GPIO 21
-* **I2C Bus (SCL):** GPIO 15
+* **I2C Bus (SCL):** GPIO 22
 * **Sensor Infrarrojo 1 (Digital IN):** GPIO 13
 * **Sensor Infrarrojo 2 (Digital IN):** GPIO 12
 

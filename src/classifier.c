@@ -19,8 +19,10 @@ const char *classifier_result_to_string(classifier_result_t result)
     switch (result) {
     case CLASSIFIER_RESULT_EMPTY:
         return "vacio";
-    case CLASSIFIER_RESULT_UNKNOWN_METAL:
-        return "metal_desconocido";
+    case CLASSIFIER_RESULT_SAFE:
+        return "seguro";
+    case CLASSIFIER_RESULT_ALERT:
+        return "alerta";
     default:
         return "resultado_invalido";
     }

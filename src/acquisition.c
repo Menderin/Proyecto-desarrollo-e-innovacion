@@ -11,11 +11,8 @@
 
 static const char *TAG = "ACQ";
 
-static const uint8_t MAGNETOMETER_CHANNELS[SENSOR_COUNT] = {0, 1};
-static const uint8_t MAGNETOMETER_ADDRS[SENSOR_COUNT] = {
-    MAGNETOMETER_I2C_ADDR,
-    MAGNETOMETER_I2C_ADDR,
-};
+static const uint8_t MAGNETOMETER_CHANNELS[SENSOR_COUNT] = {0};
+static const uint8_t MAGNETOMETER_ADDRS[SENSOR_COUNT] = {MAGNETOMETER_I2C_ADDR};
 
 esp_err_t acquisition_capture(acquisition_buffer_t *buffer, uint32_t duration_ms)
 {

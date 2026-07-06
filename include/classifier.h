@@ -10,7 +10,8 @@ extern "C" {
 
 typedef enum {
     CLASSIFIER_RESULT_EMPTY = 0,
-    CLASSIFIER_RESULT_UNKNOWN_METAL,
+    CLASSIFIER_RESULT_SAFE,
+    CLASSIFIER_RESULT_ALERT,
 } classifier_result_t;
 
 esp_err_t classifier_init(void);
