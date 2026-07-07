@@ -12,6 +12,7 @@
 
 #include "camera_node_config.h"
 #include "camera_service.h"
+#include "telegram_service.h"
 
 static const char *TAG = "DETECTOR_LINK";
 
@@ -36,7 +37,7 @@ static void handle_start(char *save_ptr)
              crossing_id,
              direction != NULL ? direction : "UNKNOWN");
 
-    if (camera_service_capture(crossing_id) == ESP_OK) {
+    if (camera_service_capture(crossing_id, direction) == ESP_OK) {
         char response[48];
         snprintf(response, sizeof(response), "PHOTO_OK,%" PRIu32, crossing_id);
         send_response(response);
@@ -71,8 +72,11 @@ static void handle_alert(char *save_ptr)
     }
 
     const uint32_t crossing_id = (uint32_t)strtoul(id_text, NULL, 10);
-    const pending_photo_t *photo = camera_service_pending_photo();
-    if (!photo->valid || photo->crossing_id != crossing_id) {
+    telegram_alert_t alert = {
+        .p90_raw = (int32_t)strtol(p90_text, NULL, 10),
+        .threshold_raw = (int32_t)strtol(threshold_text, NULL, 10),
+    };
+    if (camera_service_take_pending(crossing_id, &alert.photo) != ESP_OK) {
         ESP_LOGE(TAG, "ALERT id=%" PRIu32 " sin foto asociada", crossing_id);
         send_response("ALERT_NO_PHOTO");
         return;
@@ -84,11 +88,16 @@ static void handle_alert(char *save_ptr)
              crossing_id,
              p90_text,
              threshold_text,
-             (unsigned)photo->jpeg_size);
+             (unsigned)alert.photo.jpeg_size);
 
-    // Fase siguiente: encolar photo->jpeg para Telegram. La foto se conserva
-    // en PSRAM hasta recibir un nuevo START o hasta que el futuro emisor la libere.
-    send_response("ALERT_PHOTO_READY");
+    const esp_err_t result = telegram_service_enqueue(&alert);
+    if (result == ESP_OK) {
+        send_response("ALERT_QUEUED");
+    } else {
+        ESP_LOGE(TAG, "No se pudo encolar Telegram: %s", esp_err_to_name(result));
+        camera_service_release_photo(&alert.photo);
+        send_response("ALERT_QUEUE_FAIL");
+    }
 }
 
 static void process_line(char *line)

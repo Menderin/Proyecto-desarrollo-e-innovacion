@@ -3,7 +3,6 @@
 
 #include "driver/gpio.h"
 #include "driver/i2c.h"
-#include "driver/uart.h"
 
 #define PIN_IR_1        GPIO_NUM_32
 #define PIN_IR_2        GPIO_NUM_33
@@ -47,12 +46,5 @@
 #define CLASSIFIER_MIN_THRESHOLD_RAW     180
 #define CLASSIFIER_NOISE_MULTIPLIER      6
 #define CLASSIFIER_NOISE_MARGIN_RAW      40
-
-#define APP_CAMERA_LINK_ENABLED 1
-#define CAMERA_LINK_UART        UART_NUM_2
-#define CAMERA_LINK_TX_PIN      GPIO_NUM_17
-#define CAMERA_LINK_RX_PIN      GPIO_NUM_16
-#define CAMERA_LINK_BAUD        115200
-#define CAMERA_LINK_RX_BUF_SIZE 256
 
 #endif

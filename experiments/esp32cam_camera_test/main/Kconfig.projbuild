@@ -1,0 +1,44 @@
+menu "Nodo ESP32-CAM"
+
+    config CAMERA_TELEGRAM_ENABLED
+        bool "Habilitar envio de alertas a Telegram"
+        default n
+
+    config CAMERA_WIFI_SSID
+        string "Nombre de la red Wi-Fi"
+        default ""
+        depends on CAMERA_TELEGRAM_ENABLED
+
+    config CAMERA_WIFI_PASSWORD
+        string "Contrasena de la red Wi-Fi"
+        default ""
+        depends on CAMERA_TELEGRAM_ENABLED
+
+    config CAMERA_TELEGRAM_BOT_TOKEN
+        string "Token del bot de Telegram"
+        default ""
+        depends on CAMERA_TELEGRAM_ENABLED
+
+    config CAMERA_TELEGRAM_CHAT_ID
+        string "Chat ID del grupo de Telegram"
+        default ""
+        depends on CAMERA_TELEGRAM_ENABLED
+
+    config CAMERA_TELEGRAM_QUEUE_LENGTH
+        int "Alertas que pueden esperar envio"
+        range 1 4
+        default 2
+        depends on CAMERA_TELEGRAM_ENABLED
+
+    config CAMERA_TELEGRAM_RETRIES
+        int "Intentos de envio por alerta"
+        range 1 5
+        default 3
+        depends on CAMERA_TELEGRAM_ENABLED
+
+    config CAMERA_TELEGRAM_TEST_ON_BOOT
+        bool "Enviar foto de prueba a Telegram al arrancar"
+        default n
+        depends on CAMERA_TELEGRAM_ENABLED
+
+endmenu

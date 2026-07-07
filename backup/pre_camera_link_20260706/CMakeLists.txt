@@ -7,7 +7,6 @@ idf_component_register(
         "magnetometer.c"
         "acquisition.c"
         "classifier.c"
-        "camera_link.c"
         "edge_impulse_adapter.cpp"
     INCLUDE_DIRS "../include"
     REQUIRES driver

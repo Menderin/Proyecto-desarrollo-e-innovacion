@@ -27,3 +27,13 @@ const char *classifier_result_to_string(classifier_result_t result)
         return "resultado_invalido";
     }
 }
+
+int32_t classifier_last_p90_raw(void)
+{
+    return edge_impulse_adapter_last_p90_raw();
+}
+
+int32_t classifier_last_threshold_raw(void)
+{
+    return edge_impulse_adapter_last_threshold_raw();
+}

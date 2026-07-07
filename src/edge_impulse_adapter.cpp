@@ -15,6 +15,7 @@ static const char *TAG = "CLASSIFIER";
 
 static magnetometer_axes_t s_baseline[SENSOR_COUNT] = {};
 static int32_t s_threshold_raw = CLASSIFIER_MIN_THRESHOLD_RAW;
+static int32_t s_last_p90_raw = 0;
 static bool s_calibrated = false;
 
 static int compare_i16(const void *lhs, const void *rhs)
@@ -201,21 +202,32 @@ classifier_result_t edge_impulse_adapter_run(const acquisition_buffer_t *buffer)
     const uint64_t p90_sq = magnitudes_sq[p90_idx];
     const uint64_t threshold_sq =
         static_cast<uint64_t>(s_threshold_raw) * s_threshold_raw;
+    s_last_p90_raw = integer_sqrt_u64(p90_sq);
     const classifier_result_t result =
         p90_sq >= threshold_sq ? CLASSIFIER_RESULT_ALERT : CLASSIFIER_RESULT_SAFE;
 
     ESP_LOGI(TAG,
              "Clasificacion p90=%ld threshold=%ld muestras=%u resultado=%s",
-             (long)integer_sqrt_u64(p90_sq),
+             (long)s_last_p90_raw,
              (long)s_threshold_raw,
              (unsigned)magnitude_count,
              result == CLASSIFIER_RESULT_ALERT ? "alerta" : "seguro");
     ESP_LOGI(TAG,
              "CROSS_JSON:{\"p90_raw\":%ld,\"threshold_raw\":%ld,"
              "\"samples\":%u,\"prediction\":\"%s\"}",
-             (long)integer_sqrt_u64(p90_sq),
+             (long)s_last_p90_raw,
              (long)s_threshold_raw,
              (unsigned)magnitude_count,
              result == CLASSIFIER_RESULT_ALERT ? "dangerous" : "allowed");
     return result;
+}
+
+int32_t edge_impulse_adapter_last_p90_raw(void)
+{
+    return s_last_p90_raw;
+}
+
+int32_t edge_impulse_adapter_last_threshold_raw(void)
+{
+    return s_threshold_raw;
 }

@@ -68,7 +68,7 @@ esp_err_t camera_service_init(void)
     return ESP_OK;
 }
 
-esp_err_t camera_service_capture(uint32_t crossing_id)
+esp_err_t camera_service_capture(uint32_t crossing_id, const char *direction)
 {
     release_pending_photo();
 
@@ -95,6 +95,11 @@ esp_err_t camera_service_capture(uint32_t crossing_id)
     s_pending.jpeg = jpeg_copy;
     s_pending.jpeg_size = frame->len;
     s_pending.crossing_id = crossing_id;
+    strlcpy(
+        s_pending.direction,
+        direction != NULL ? direction : "UNKNOWN",
+        sizeof(s_pending.direction)
+    );
     s_pending.valid = true;
     esp_camera_fb_return(frame);
 
@@ -118,3 +123,27 @@ const pending_photo_t *camera_service_pending_photo(void)
     return &s_pending;
 }
 
+esp_err_t camera_service_take_pending(uint32_t crossing_id, pending_photo_t *photo)
+{
+    if (photo == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!s_pending.valid || s_pending.crossing_id != crossing_id) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    *photo = s_pending;
+    memset(&s_pending, 0, sizeof(s_pending));
+    return ESP_OK;
+}
+
+void camera_service_release_photo(pending_photo_t *photo)
+{
+    if (photo == NULL) {
+        return;
+    }
+    if (photo->jpeg != NULL) {
+        heap_caps_free(photo->jpeg);
+    }
+    memset(photo, 0, sizeof(*photo));
+}

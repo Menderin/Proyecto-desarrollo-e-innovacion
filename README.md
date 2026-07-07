@@ -12,16 +12,24 @@ No se deben mover despues de calibrar.
 ### Registrar cruces reales
 
 No abrir `idf.py monitor` al mismo tiempo: solo un programa puede usar el
-puerto serial. Para cada objeto, ejecutar el capturador y despues pulsar RESET
-en el ESP32 sin objetos cerca:
+puerto serial. Para registrar varios objetos en una sola sesion:
 
 ```powershell
 python -m pip install pyserial
-python tools/capture_crossings.py --port COM4 --label cuchillo_grande --class dangerous --count 10
-python tools/capture_crossings.py --port COM4 --label cortacarton --class dangerous --count 10
-python tools/capture_crossings.py --port COM4 --label cuchillo_mesa --class dangerous --count 10
+python tools/capture_crossings.py --port COM4 --count 10
+```
+
+El programa pedira clase, nombre y cantidad para cada objeto. Al terminar una
+serie permite iniciar la siguiente sin cerrar el puerto ni reiniciar la
+baseline. Escribir `fin` cuando no queden objetos.
+
+Despues de iniciar el capturador, pulsar RESET en el ESP32 sin objetos cerca.
+Esperar `Baseline recibida` antes de medir.
+
+Tambien se conserva el modo de una sola etiqueta:
+
+```powershell
 python tools/capture_crossings.py --port COM4 --label llaves --class allowed --count 10
-python tools/capture_crossings.py --port COM4 --label mochila_vacia --class allowed --count 10
 ```
 
 El script guarda cada cruce inmediatamente en `data/crossings/`. Si se

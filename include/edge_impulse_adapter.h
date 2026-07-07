@@ -1,6 +1,8 @@
 #ifndef EDGE_IMPULSE_ADAPTER_H
 #define EDGE_IMPULSE_ADAPTER_H
 
+#include <stdint.h>
+
 #include "acquisition.h"
 #include "classifier.h"
 #include "esp_err.h"
@@ -11,6 +13,8 @@ extern "C" {
 
 esp_err_t edge_impulse_adapter_init(void);
 classifier_result_t edge_impulse_adapter_run(const acquisition_buffer_t *buffer);
+int32_t edge_impulse_adapter_last_p90_raw(void);
+int32_t edge_impulse_adapter_last_threshold_raw(void);
 
 #ifdef __cplusplus
 }

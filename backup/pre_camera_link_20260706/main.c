@@ -9,7 +9,6 @@
 #include "esp_log.h"
 
 #include "acquisition.h"
-#include "camera_link.h"
 #include "classifier.h"
 #include "detector_thresholds.h"
 #include "i2c_bus.h"
@@ -676,7 +675,6 @@ void app_main(void)
 
     ESP_ERROR_CHECK(classifier_init());
     ESP_LOGI(TAG, "Clasificador inicializado");
-    ESP_ERROR_CHECK(camera_link_init());
 
     ir_state_t previous_ir_state = ir_sensor_read();
     ESP_LOGI(TAG, "Monitoreo de cruce activo: IR1=GPIO%d IR2=GPIO%d",
@@ -692,14 +690,8 @@ void app_main(void)
             continue;
         }
 
-        static uint32_t crossing_id = 0;
-        crossing_id++;
-
-        const char *crossing_direction = crossing_start_to_string(crossing_start);
-        ESP_LOGI(TAG, "Cruce iniciado id=%lu direccion=%s",
-                 (unsigned long)crossing_id,
-                 crossing_direction);
-        camera_link_send_start(crossing_id, crossing_direction);
+        ESP_LOGI(TAG, "Cruce iniciado direccion=%s",
+                 crossing_start_to_string(crossing_start));
 
         static acquisition_buffer_t buffer;
         bool ended_by_opposite_sensor = false;
@@ -712,7 +704,6 @@ void app_main(void)
         if (acq_result != ESP_OK) {
             ESP_LOGE(TAG, "Fallo en adquisicion de cruce: %s",
                      esp_err_to_name(acq_result));
-            camera_link_send_safe(crossing_id);
         } else {
             ESP_LOGI(TAG,
                      "Cruce terminado direccion=%s frames=%u cierre=%s",
@@ -723,16 +714,6 @@ void app_main(void)
             classifier_result_t result = classifier_run(&buffer);
             ESP_LOGI(TAG, "Resultado clasificacion: %s",
                      classifier_result_to_string(result));
-
-            if (result == CLASSIFIER_RESULT_ALERT) {
-                camera_link_send_alert(
-                    crossing_id,
-                    classifier_last_p90_raw(),
-                    classifier_last_threshold_raw()
-                );
-            } else {
-                camera_link_send_safe(crossing_id);
-            }
         }
 
         wait_crossing_clear();

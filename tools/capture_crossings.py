@@ -48,6 +48,42 @@ def available_ports() -> list:
     return list(list_ports.comports())
 
 
+def normalize_label(label: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_-]+", "_", label.strip()).strip("_")
+
+
+def prompt_batch(default_count: int) -> dict | None:
+    print("\nNueva serie. Escribe 'fin' para terminar y guardar.")
+    while True:
+        class_text = input("Clase [p=peligroso, s=seguro, fin]: ").strip().lower()
+        if class_text in {"fin", "f", "done"}:
+            return None
+        if class_text in {"p", "peligroso", "dangerous"}:
+            object_class = "dangerous"
+            break
+        if class_text in {"s", "seguro", "allowed"}:
+            object_class = "allowed"
+            break
+        print("Clase invalida.")
+
+    while True:
+        safe_label = normalize_label(input("Nombre del objeto: "))
+        if safe_label:
+            break
+        print("El nombre no puede quedar vacio.")
+
+    count_text = input(f"Cantidad de mediciones [{default_count}]: ").strip()
+    try:
+        count = int(count_text) if count_text else default_count
+    except ValueError:
+        count = 0
+    if count <= 0:
+        print("Cantidad invalida; se usara el valor por defecto.")
+        count = default_count
+
+    return {"label": safe_label, "class": object_class, "count": count}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", help="Puerto serial, por ejemplo COM4")
@@ -71,39 +107,57 @@ def main() -> int:
             print(f"{port.device}: {port.description}")
         return 0
 
-    if not args.port or not args.label or not args.object_class:
-        parser.error("--port, --label y --class son obligatorios")
+    if not args.port:
+        parser.error("--port es obligatorio")
+    if bool(args.label) != bool(args.object_class):
+        parser.error("--label y --class deben usarse juntos")
     if args.count <= 0:
         parser.error("--count debe ser mayor que cero")
 
-    safe_label = re.sub(r"[^a-zA-Z0-9_-]+", "_", args.label.strip()).strip("_")
-    if not safe_label:
-        parser.error("--label no contiene caracteres utilizables")
+    interactive = not args.label
+    if interactive:
+        batch = prompt_batch(args.count)
+        if batch is None:
+            print("No se solicitaron mediciones.")
+            return 0
+    else:
+        safe_label = normalize_label(args.label)
+        if not safe_label:
+            parser.error("--label no contiene caracteres utilizables")
+        batch = {
+            "label": safe_label,
+            "class": args.object_class,
+            "count": args.count,
+        }
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = Path(args.out_dir) / f"crossings_{stamp}_{safe_label}.json"
+    file_suffix = "session" if interactive else batch["label"]
+    output_path = Path(args.out_dir) / f"crossings_{stamp}_{file_suffix}.json"
     payload = {
         "session": {
             "created_utc": datetime.now(timezone.utc).isoformat(),
             "port": args.port,
             "baud": args.baud,
-            "label": safe_label,
-            "class": args.object_class,
-            "target_crossings": args.count,
+            "mode": "interactive" if interactive else "single",
             "note": args.note,
         },
         "baseline": None,
+        "batches": [],
         "crossings": [],
     }
     save_payload(output_path, payload)
 
     print(f"Guardando en: {output_path}")
     print("Reinicia el ESP32 sin objetos cerca y espera 'Calibracion lista'.")
-    print(f"Luego realiza {args.count} cruces con: {safe_label}")
+    print(
+        f"Luego realiza {batch['count']} mediciones con: "
+        f"{batch['label']} ({batch['class']})"
+    )
 
     try:
         with serial.Serial(args.port, args.baud, timeout=1) as ser:
-            while len(payload["crossings"]) < args.count:
+            batch_start = len(payload["crossings"])
+            while batch is not None:
                 raw_line = ser.readline()
                 if not raw_line:
                     continue
@@ -113,27 +167,60 @@ def main() -> int:
                 if baseline is not None:
                     payload["baseline"] = baseline
                     save_payload(output_path, payload)
+                    axes = baseline.get("baseline", {})
                     print(
                         "Baseline recibida: "
+                        f"x={axes.get('x')} y={axes.get('y')} z={axes.get('z')} "
                         f"noise={baseline.get('noise_p90_raw')} "
                         f"threshold={baseline.get('threshold_raw')}"
                     )
+                    if -4096 in (axes.get("x"), axes.get("y"), axes.get("z")):
+                        print(
+                            "ERROR: baseline saturada (-4096). "
+                            "No realices mediciones; aleja metales y reinicia."
+                        )
                     continue
 
                 crossing = parse_marker(line, CROSS_MARKER)
                 if crossing is None:
                     continue
 
+                batch_sequence = len(payload["crossings"]) - batch_start + 1
                 crossing["sequence"] = len(payload["crossings"]) + 1
-                crossing["label"] = safe_label
-                crossing["class"] = args.object_class
+                crossing["batch_sequence"] = batch_sequence
+                crossing["label"] = batch["label"]
+                crossing["class"] = batch["class"]
                 payload["crossings"].append(crossing)
                 save_payload(output_path, payload)
                 print(
-                    f"[{crossing['sequence']}/{args.count}] "
+                    f"[{batch_sequence}/{batch['count']}] "
+                    f"{batch['label']} "
                     f"p90={crossing.get('p90_raw')} "
                     f"prediction={crossing.get('prediction')}"
                 )
+
+                if batch_sequence < batch["count"]:
+                    continue
+
+                payload["batches"].append(
+                    {
+                        "label": batch["label"],
+                        "class": batch["class"],
+                        "count": batch_sequence,
+                    }
+                )
+                save_payload(output_path, payload)
+                if not interactive:
+                    batch = None
+                    continue
+
+                batch = prompt_batch(args.count)
+                batch_start = len(payload["crossings"])
+                if batch is not None:
+                    print(
+                        f"Realiza {batch['count']} mediciones con: "
+                        f"{batch['label']} ({batch['class']})"
+                    )
     except KeyboardInterrupt:
         print("\nCaptura interrumpida; los registros obtenidos quedaron guardados.")
     except SerialException as exc:

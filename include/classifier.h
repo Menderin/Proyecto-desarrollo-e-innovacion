@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #include "acquisition.h"
 #include "esp_err.h"
 
@@ -17,6 +19,8 @@ typedef enum {
 esp_err_t classifier_init(void);
 classifier_result_t classifier_run(const acquisition_buffer_t *buffer);
 const char *classifier_result_to_string(classifier_result_t result);
+int32_t classifier_last_p90_raw(void);
+int32_t classifier_last_threshold_raw(void);
 
 #ifdef __cplusplus
 }
