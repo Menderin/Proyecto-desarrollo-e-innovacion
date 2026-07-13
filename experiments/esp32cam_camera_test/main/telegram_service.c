@@ -3,6 +3,8 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "esp_crt_bundle.h"
 #include "esp_http_client.h"
@@ -29,6 +31,35 @@
 static const char *TAG = "TELEGRAM";
 static const char *MULTIPART_BOUNDARY = "----ESP32CAMBoundary7MA4YWxk";
 static QueueHandle_t s_alert_queue;
+
+static void build_alert_caption(char *caption, size_t caption_size)
+{
+    time_t now = 0;
+    struct tm local_time = {0};
+    char date_text[16] = "sin fecha";
+    char time_text[16] = "sin hora";
+
+    time(&now);
+    if (now > 0) {
+        // Chile continental usa UTC-4 en invierno. Es suficiente para la
+        // fecha/hora de evaluacion y evita depender de base de zonas horarias.
+        setenv("TZ", "<-04>4", 1);
+        tzset();
+        localtime_r(&now, &local_time);
+        strftime(date_text, sizeof(date_text), "%d-%m-%Y", &local_time);
+        strftime(time_text, sizeof(time_text), "%H:%M:%S", &local_time);
+    }
+
+    snprintf(
+        caption,
+        caption_size,
+        "Posible entrada de objeto punzante.\n"
+        "Fecha: %s\n"
+        "Hora: %s",
+        date_text,
+        time_text
+    );
+}
 
 static esp_err_t http_write_all(esp_http_client_handle_t client,
                                 const uint8_t *data,
@@ -69,16 +100,7 @@ static esp_err_t telegram_send_photo(const telegram_alert_t *alert)
     }
 
     char caption[192];
-    snprintf(
-        caption,
-        sizeof(caption),
-        "ALERTA MAGNETICA | cruce=%" PRIu32 " | direccion=%s | p90=%" PRId32
-        " | umbral=%" PRId32,
-        alert->photo.crossing_id,
-        alert->photo.direction,
-        alert->p90_raw,
-        alert->threshold_raw
-    );
+    build_alert_caption(caption, sizeof(caption));
 
     char prefix[768];
     const int prefix_len = snprintf(
